@@ -1,297 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kimberly Wilson — Invoice Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/4.1.5/signature_pad.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['Playfair Display', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        rose: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            200: '#fecdd3',
+                            300: '#fda4af',
+                            400: '#fb7185',
+                            500: '#f43f5e',
+                            600: '#e11d48',
+                            700: '#be123c',
+                            800: '#9f1239',
+                            900: '#881337',
+                        },
+                        champagne: '#faf7f2',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            background: linear-gradient(180deg, #faf7f2 0%, #fff 100%);
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(244, 63, 94, 0.08);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+        }
+        
+        .nav-item {
+            transition: all 0.2s ease;
+        }
+        
+        .nav-item:hover {
+            background: rgba(244, 63, 94, 0.05);
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-paid { background: #dcfce7; color: #166534; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-overdue { background: #fee2e2; color: #991b1b; }
+        .status-draft { background: #f3f4f6; color: #4b5563; }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+            box-shadow: 0 4px 14px rgba(244, 63, 94, 0.35);
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(244, 63, 94, 0.4);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .card-hover {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+        }
+        
+        .input-luxe {
+            background: #fff;
+            border: 2px solid #f3f4f6;
+            transition: all 0.2s ease;
+        }
+        
+        .input-luxe:focus {
+            border-color: #f43f5e;
+            box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
+            outline: none;
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .empty-state-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+        
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .quick-action {
+            transition: all 0.15s ease;
+        }
+        
+        .quick-action:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased">
 
-    
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-4xl mx-auto px-4 py-4">
-            <div class="text-center">
-                <h1 class="text-2xl font-bold text-gray-800 brand-header tracking-wide">KIMBERLY WILSON</h1>
-                <p class="text-rose-500 font-medium text-sm tracking-widest">@THAMAKEUPARTIST</p>
+    <!-- Mobile Header -->
+    <header class="lg:hidden bg-white border-b border-rose-100 px-4 py-3 flex items-center justify-between sticky top-0 z-40">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-rose-400 to-rose-600 rounded-full flex items-center justify-center text-white text-lg">
+                💋
             </div>
-            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-500">
-                #<span id="headerInvoiceNum">001</span>
+            <div>
+                <h1 class="font-serif font-bold text-gray-900">Kimberly Wilson</h1>
+                <p class="text-xs text-rose-500">@thamakeupartist</p>
             </div>
         </div>
+        <button onclick="toggleMobileMenu()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100">
+            <i class="fas fa-bars text-gray-600"></i>
+        </button>
     </header>
 
-    <main class="max-w-4xl mx-auto px-4 py-6 pb-32">
+    <div class="flex min-h-screen">
         
-        
-        <section class="bg-white rounded-xl shadow-sm p-6 mb-6">
-            <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <span class="w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm">1</span>
-                Client Details
-            </h2>
-            
-            <div class="grid gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
-                    <input type="text" id="clientName" placeholder="Jane Smith" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
-                    <input type="email" id="clientEmail" placeholder="jane@example.com" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                    <textarea id="clientAddress" rows="2" placeholder="123 Main St, City, State 12345" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition resize-none"></textarea>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Invoice Date</label>
-                        <input type="date" id="invoiceDate" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 w-64 bg-white border-r border-rose-100 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-50 flex flex-col">
+            <div class="p-6 border-b border-rose-100 hidden lg:block">
+                <div class="flex items-center gap-3 mb-1">
+                    <div class="w-12 h-12 bg-gradient-to-br from-rose-400 to-rose-600 rounded-full flex items-center justify-center text-white text-xl shadow-lg">
+                        💋
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Payment Terms</label>
-                        <select id="paymentTerms" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition bg-white">
-                            <option value="0">Due on Receipt</option>
-                            <option value="7">Net 7</option>
-                            <option value="14">Net 14</option>
-                            <option value="30" selected="">Net 30</option>
-                        </select>
+                        <h1 class="font-serif font-bold text-gray-900 text-lg">Kimberly Wilson</h1>
+                        <p class="text-xs text-rose-500">@thamakeupartist</p>
                     </div>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
-                    <input type="text" id="dueDate" readonly="" class="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg text-gray-600 font-medium">
                 </div>
             </div>
-        </section>
+            
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                <button onclick="showView('dashboard')" id="nav-dashboard" class="nav-item active w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium">
+                    <i class="fas fa-home w-5"></i>
+                    <span>Dashboard</span>
+                </button>
+                
+                <button onclick="showView('invoices')" id="nav-invoices" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium text-gray-600">
+                    <i class="fas fa-file-invoice w-5"></i>
+                    <span>Invoices</span>
+                    <span id="invoice-count" class="ml-auto bg-rose-100 text-rose-600 text-xs px-2 py-1 rounded-full hidden">0</span>
+                </button>
+                
+                <button onclick="showView('clients')" id="nav-clients" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium text-gray-600">
+                    <i class="fas fa-users w-5"></i>
+                    <span>Clients</span>
+                    <span id="client-count" class="ml-auto bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full hidden">0</span>
+                </button>
+                
+                <button onclick="showView('analytics')" id="nav-analytics" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium text-gray-600">
+                    <i class="fas fa-chart-line w-5"></i>
+                    <span>Revenue</span>
+                </button>
+            </nav>
+            
+            <div class="p-4 border-t border-rose-100">
+                <button onclick="createNewInvoice()" class="btn-primary w-full py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-plus"></i>
+                    <span>New Invoice</span>
+                </button>
+            </div>
+        </aside>
 
-        
-        <section class="bg-white rounded-xl shadow-sm p-6 mb-6">
-            <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <span class="w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm">2</span>
-                Services
-            </h2>
+        <!-- Overlay for mobile -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" onclick="toggleMobileMenu()"></div>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
             
-            
-            <div class="mb-4 p-4 bg-rose-50 rounded-lg">
-                <p class="text-sm text-rose-800 font-medium mb-2">Quick Add Services:</p>
-                <div class="flex flex-wrap gap-2">
-                    <button class="px-3 py-1.5 bg-white border border-rose-200 rounded-full text-sm text-rose-700 hover:bg-rose-100 transition">
-                        Bridal ($350)
+            <!-- DASHBOARD VIEW -->
+            <div id="view-dashboard" class="view p-4 lg:p-8 max-w-7xl mx-auto animate-fade-in">
+                <div class="mb-8">
+                    <h2 class="font-serif text-3xl font-bold text-gray-900 mb-2">Good afternoon, Kimberly</h2>
+                    <p class="text-gray-500">Here's what's happening with your business</p>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div class="glass-panel rounded-2xl p-5 card-hover">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-gray-500 text-sm font-medium">This Month</span>
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-xs">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-900" id="stat-month">$0</p>
+                        <p class="text-xs text-gray-400 mt-1">Revenue</p>
+                    </div>
+                    
+                    <div class="glass-panel rounded-2xl p-5 card-hover">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-gray-500 text-sm font-medium">Outstanding</span>
+                            <div class="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 text-xs">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-900" id="stat-outstanding">$0</p>
+                        <p class="text-xs text-gray-400 mt-1">To be paid</p>
+                    </div>
+                    
+                    <div class="glass-panel rounded-2xl p-5 card-hover">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-gray-500 text-sm font-medium">Total Clients</span>
+                            <div class="w-8 h-8 bg-rose-100 rounded-full flex items-center justify-center text-rose-600 text-xs">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-900" id="stat-clients">0</p>
+                        <p class="text-xs text-gray-400 mt-1">All time</p>
+                    </div>
+                    
+                    <div class="glass-panel rounded-2xl p-5 card-hover">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-gray-500 text-sm font-medium">Paid Rate</span>
+                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-xs">
+                                <i class="fas fa-check"></i>
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-900" id="stat-rate">0%</p>
+                        <p class="text-xs text-gray-400 mt-1">Collection</p>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="grid md:grid-cols-3 gap-4 mb-8">
+                    <button onclick="createNewInvoice()" class="quick-action glass-panel rounded-xl p-5 text-left card-hover border-2 border-transparent hover:border-rose-200">
+                        <div class="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center text-rose-600 mb-3">
+                            <i class="fas fa-plus text-lg"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-1">Create Invoice</h3>
+                        <p class="text-sm text-gray-500">Bill a new or existing client</p>
                     </button>
-                    <button class="px-3 py-1.5 bg-white border border-rose-200 rounded-full text-sm text-rose-700 hover:bg-rose-100 transition">
-                        Trial ($120)
+                    
+                    <button onclick="showView('clients'); showAddClientModal()" class="quick-action glass-panel rounded-xl p-5 text-left card-hover border-2 border-transparent hover:border-rose-200">
+                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 mb-3">
+                            <i class="fas fa-user-plus text-lg"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-1">Add Client</h3>
+                        <p class="text-sm text-gray-500">Save a new contact</p>
                     </button>
-                    <button class="px-3 py-1.5 bg-white border border-rose-200 rounded-full text-sm text-rose-700 hover:bg-rose-100 transition">
-                        Travel ($50)
+                    
+                    <button onclick="showOverdueInvoices()" class="quick-action glass-panel rounded-xl p-5 text-left card-hover border-2 border-transparent hover:border-rose-200">
+                        <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 mb-3">
+                            <i class="fas fa-bell text-lg"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-1">Follow Ups</h3>
+                        <p class="text-sm text-gray-500" id="overdue-count">No overdue invoices</p>
+                    </button>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="glass-panel rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="font-semibold text-lg text-gray-900">Recent Invoices</h3>
+                        <button onclick="showView('invoices')" class="text-rose-600 text-sm font-medium hover:text-rose-700">View All</button>
+                    </div>
+                    
+                    <div id="recent-invoices-list" class="space-y-3">
+                        <!-- Populated by JS -->
+                    </div>
+                    
+                    <div id="empty-recent" class="empty-state hidden">
+                        <div class="empty-state-icon">📋</div>
+                        <h3 class="font-semibold text-gray-900 mb-2">No invoices yet</h3>
+                        <p class="text-gray-500 text-sm mb-4">Create your first invoice to get started</p>
+                        <button onclick="createNewInvoice()" class="btn-primary px-6 py-2 rounded-full text-white text-sm font-medium">
+                            Create Invoice
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INVOICES VIEW -->
+            <div id="view-invoices" class="view hidden p-4 lg:p-8 max-w-7xl mx-auto animate-fade-in">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="font-serif text-3xl font-bold text-gray-900 mb-1">Invoices</h2>
+                        <p class="text-gray-500">Manage and track all your invoices</p>
+                    </div>
+                    <button onclick="createNewInvoice()" class="btn-primary px-6 py-3 rounded-xl text-white font-semibold flex items-center gap-2">
+                        <i class="fas fa-plus"></i>
+                        New Invoice
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <button onclick="filterInvoices('all')" id="filter-all" class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-rose-500 text-white">All</button>
+                    <button onclick="filterInvoices('pending')" id="filter-pending" class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-600 border border-gray-200">Pending</button>
+                    <button onclick="filterInvoices('paid')" id="filter-paid" class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-600 border border-gray-200">Paid</button>
+                    <button onclick="filterInvoices('overdue')" id="filter-overdue" class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-600 border border-gray-200">Overdue</button>
+                </div>
+
+                <!-- Invoice List -->
+                <div id="invoices-list" class="space-y-3">
+                    <!-- Populated by JS -->
+                </div>
+                
+                <div id="empty-invoices" class="empty-state glass-panel rounded-2xl hidden">
+                    <div class="empty-state-icon">📋</div>
+                    <h3 class="font-semibold text-gray-900 mb-2">No invoices found</h3>
+                    <p class="text-gray-500 text-sm">Create your first invoice to get started</p>
+                </div>
+            </div>
+
+            <!-- CLIENTS VIEW -->
+            <div id="view-clients" class="view hidden p-4 lg:p-8 max-w-7xl mx-auto animate-fade-in">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="font-serif text-3xl font-bold text-gray-900 mb-1">Clients</h2>
+                        <p class="text-gray-500">Your client directory</p>
+                    </div>
+                    <button onclick="showAddClientModal()" class="btn-primary px-6 py-3 rounded-xl text-white font-semibold flex items-center gap-2">
+                        <i class="fas fa-plus"></i>
+                        Add Client
+                    </button>
+                </div>
+
+                <!-- Search -->
+                <div class="mb-6">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="client-search" placeholder="Search clients..." 
+                            class="input-luxe w-full pl-12 pr-4 py-3 rounded-xl"
+                            oninput="searchClients(this.value)">
+                    </div>
+                </div>
+
+                <!-- Client List -->
+                <div id="clients-list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Populated by JS -->
+                </div>
+                
+                <div id="empty-clients" class="empty-state glass-panel rounded-2xl hidden">
+                    <div class="empty-state-icon">👥</div>
+                    <h3 class="font-semibold text-gray-900 mb-2">No clients yet</h3>
+                    <p class="text-gray-500 text-sm mb-4">Add your first client to get started</p>
+                    <button onclick="showAddClientModal()" class="btn-primary px-6 py-2 rounded-full text-white text-sm font-medium">
+                        Add Client
                     </button>
                 </div>
             </div>
-            
-            
-            <div id="lineItemsContainer" class="space-y-3">
+
+            <!-- ANALYTICS VIEW -->
+            <div id="view-analytics" class="view hidden p-4 lg:p-8 max-w-7xl mx-auto animate-fade-in">
+                <h2 class="font-serif text-3xl font-bold text-gray-900 mb-6">Revenue Insights</h2>
                 
-            </div>
-            
-            
-            <button class="mt-4 btn-secondary border-2 border-dashed border-gray-300 hover:border-rose-400">
-                + Add Line Item
-            </button>
-            
-            
-            <div class="mt-6 pt-6 border-t border-gray-200">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-gray-600">Subtotal:</span>
-                    <span id="subtotalDisplay" class="font-medium">$0.00</span>
-                </div>
-                
-                
-                <div class="flex items-center gap-3 mb-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
-                    <input type="checkbox" id="surchargeToggle" class="w-5 h-5 text-rose-500 rounded focus:ring-rose-500">
-                    <div class="flex-1">
-                        <label class="text-sm font-medium text-amber-900">Add Card Processing Fee</label>
-                        <div class="flex items-center gap-2 mt-1">
-                            <input type="number" id="surchargePercent" value="3" min="0" max="100" class="w-16 px-2 py-1 text-sm border border-amber-300 rounded text-center">
-                            <span class="text-sm text-amber-800">% surcharge</span>
+                <div class="grid lg:grid-cols-3 gap-6 mb-6">
+                    <div class="lg:col-span-2 glass-panel rounded-2xl p-6">
+                        <h3 class="font-semibold text-gray-900 mb-4">Revenue This Year</h3>
+                        <canvas id="revenueChart" height="250"></canvas>
+                    </div>
+                    
+                    <div class="glass-panel rounded-2xl p-6">
+                        <h3 class="font-semibold text-gray-900 mb-4">Top Clients</h3>
+                        <div id="top-clients-list" class="space-y-3">
+                            <!-- Populated by JS -->
                         </div>
                     </div>
                 </div>
                 
-                <div id="surchargeRow" class="flex justify-between items-center mb-2 text-amber-700 hidden">
-                    <span class="text-sm">Processing Fee:</span>
-                    <span id="surchargeDisplay" class="font-medium">$0.00</span>
+                <div class="glass-panel rounded-2xl p-6">
+                    <h3 class="font-semibold text-gray-900 mb-4">Service Breakdown</h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <canvas id="servicesChart"></canvas>
+                        <div id="services-list" class="space-y-2">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- INVOICE EDITOR MODAL -->
+    <div id="invoice-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden overflow-y-auto">
+        <div class="min-h-screen px-4 py-8 flex items-start justify-center">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden">
+                
+                <!-- Modal Header -->
+                <div class="bg-gradient-to-r from-rose-500 to-rose-600 px-6 py-4 flex items-center justify-between">
+                    <h3 class="text-white font-semibold text-lg" id="modal-title">New Invoice</h3>
+                    <button onclick="closeInvoiceModal()" class="text-white/80 hover:text-white w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
                 
-                <div class="flex justify-between items-center pt-3 border-t-2 border-gray-200">
-                    <span class="text-lg font-bold text-gray-800">Total Due:</span>
-                    <span id="totalDisplay" class="text-2xl font-bold text-rose-600">$0.00</span>
-                </div>
-            </div>
-        </section>
-
-        
-        <section class="bg-white rounded-xl shadow-sm p-6 mb-6">
-            <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <span class="w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm">3</span>
-                Payment
-            </h2>
-            
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Payment Link (Stripe/PayPal/Venmo)</label>
-                <input type="url" id="paymentLink" placeholder="https://stripe.com/pay/..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition">
-                <p class="text-xs text-gray-500 mt-1">Paste your payment URL here for the QR code</p>
-            </div>
-            
-            <button class="btn-secondary mb-4">
-                Generate QR Code
-            </button>
-            
-            <div id="qrContainer" class="hidden flex flex-col items-center p-4 bg-gray-50 rounded-lg">
-                <div id="qrcode"></div>
-                <p class="text-xs text-gray-500 mt-2">Scan to pay</p>
-            </div>
-        </section>
-
-        
-        <section class="bg-white rounded-xl shadow-sm p-6 mb-6">
-            <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <span class="w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm">4</span>
-                Signature
-            </h2>
-            
-            <div class="mb-4">
-                <canvas id="signaturePad" class="signature-pad w-full h-40 bg-white"></canvas>
-                <div class="flex gap-2 mt-3">
-                    <button class="flex-1 py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition">
-                        Clear
-                    </button>
-                    <button class="flex-1 py-2 px-4 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-sm font-medium transition">
-                        Save Signature
-                    </button>
-                </div>
-            </div>
-            <div id="signatureStatus" class="text-sm text-green-600 font-medium hidden">✓ Signature saved</div>
-        </section>
-
-        
-        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg no-print">
-            <div class="max-w-4xl mx-auto grid grid-cols-2 gap-3">
-                <button class="py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition text-sm">
-                    💾 Save Draft
-                </button>
-                <button class="py-3 px-4 bg-rose-500 hover:bg-rose-600 text-white font-medium rounded-lg transition text-sm">
-                    👁️ Preview
-                </button>
-                <button class="py-3 px-4 bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg transition text-sm col-span-2 flex items-center justify-center gap-2">
-                    📄 Download PDF
-                </button>
-                <button class="py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition text-sm col-span-2 flex items-center justify-center gap-2">
-                    ✉️ Open Email Client
-                </button>
-            </div>
-        </div>
-
-        
-        <div id="previewModal" class="fixed inset-0 bg-black/50 z-50 hidden overflow-y-auto">
-            <div class="min-h-screen px-4 py-8 flex items-center justify-center">
-                <div class="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-                    <div class="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
-                        <h3 class="font-bold text-lg">Invoice Preview</h3>
-                        <button class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
-                    </div>
-                    <div class="p-6" id="previewContent">
-                        
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    
-    <div id="invoiceTemplate" class="hidden">
-        <div class="invoice-preview p-8 max-w-3xl mx-auto" style="font-family: Georgia, 'Times New Roman', serif;">
-            
-            <div class="text-center mb-8 pb-6 border-b-2 border-rose-200">
-                <h1 style="font-size: 32px; color: #1f2937; margin: 0; font-weight: bold; letter-spacing: 3px; text-transform: uppercase;">Kimberly Wilson</h1>
-                <p style="color: #e11d48; margin: 8px 0 0 0; font-size: 14px; letter-spacing: 4px; text-transform: uppercase; font-weight: 600;">@thamakeupartist</p>
-                <p style="color: #9ca3af; margin: 8px 0 0 0; font-size: 12px; font-family: Arial, sans-serif;">Professional Makeup Artistry</p>
-            </div>
-            
-            
-            <div class="flex justify-between items-start mb-8">
-                <div>
-                    <h2 style="font-size: 24px; color: #e11d48; margin: 0; font-weight: bold; font-family: Arial, sans-serif;">INVOICE</h2>
-                    <p style="color: #666; margin: 5px 0 0 0; font-family: Arial, sans-serif;">Invoice #: <span class="inv-num" style="font-weight: bold;">001</span></p>
-                </div>
-                <div style="text-align: right; font-family: Arial, sans-serif;">
-                    <p style="margin: 0; color: #666;">Date: <span class="inv-date" style="font-weight: 600; color: #333;">--</span></p>
-                    <p style="margin: 5px 0 0 0; color: #666;">Due: <span class="inv-due" style="font-weight: 600; color: #e11d48;">--</span></p>
-                </div>
-            </div>
-            
-            
-            <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #e11d48;">
-                <p style="margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #e11d48; font-weight: bold; font-family: Arial, sans-serif;">Bill To</p>
-                <p style="margin: 0; font-size: 18px; font-weight: bold; color: #1f2937;" class="inv-client">--</p>
-                <p style="margin: 5px 0 0 0; color: #666; font-family: Arial, sans-serif;" class="inv-email">--</p>
-                <p style="margin: 5px 0 0 0; color: #666; white-space: pre-line; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5;" class="inv-address">--</p>
-            </div>
-            
-            
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-family: Arial, sans-serif;">
-                <thead>
-                    <tr style="background: #f3f4f6;">
-                        <th style="padding: 14px; text-align: left; border-bottom: 2px solid #e5e7eb; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #666;">Description</th>
-                        <th style="padding: 14px; text-align: center; border-bottom: 2px solid #e5e7eb; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #666;">Qty</th>
-                        <th style="padding: 14px; text-align: right; border-bottom: 2px solid #e5e7eb; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #666;">Unit Price</th>
-                        <th style="padding: 14px; text-align: right; border-bottom: 2px solid #e5e7eb; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #666;">Amount</th>
-                    </tr>
-                </thead>
-                <tbody class="inv-items">
+                <div class="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
                     
-                </tbody>
-            </table>
-            
-            
-            <div style="margin-left: auto; width: 320px; font-family: Arial, sans-serif;">
-                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e5e7eb;">
-                    <span style="color: #666;">Subtotal:</span>
-                    <span class="inv-subtotal" style="font-weight: 600;">$0.00</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e5e7eb;" class="inv-surcharge-row hidden">
-                    <span style="color: #666;">Processing Fee:</span>
-                    <span class="inv-surcharge" style="font-weight: 600; color: #d97706;">$0.00</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; padding: 15px 0; margin-top: 5px; border-top: 2px solid #1f2937;">
-                    <span style="font-size: 16px; font-weight: bold; color: #1f2937;">Total Due:</span>
-                    <span class="inv-total" style="font-size: 20px; font-weight: bold; color: #e11d48;">$0.00</span>
-                </div>
-            </div>
-            
-            
-            <div style="margin-top: 40px; padding: 25px; background: #f9fafb; border-radius: 8px; display: flex; align-items: center; gap: 25px; border: 1px solid #e5e7eb;">
-                <div class="inv-qr-container" style="flex-shrink: 0;"></div>
-                <div style="flex: 1;">
-                    <p style="margin: 0 0 8px 0; font-weight: bold; color: #1f2937; font-family: Arial, sans-serif; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Payment Options</p>
-                    <p style="margin: 0; color: #666; font-size: 14px; font-family: Arial, sans-serif; line-height: 1.5;">Scan the QR code to pay online instantly. For questions, contact @thamakeupartist.</p>
-                    <p style="margin: 8px 0 0 0; font-size: 11px; color: #9ca3af; font-family: Arial, sans-serif; word-break: break-all;" class="inv-payment-url"></p>
-                </div>
-            </div>
-            
-            
-            <div style="margin-top: 50px; display: flex; justify-content: flex-end;">
-                <div style="text-align: center;">
-                    <div class="inv-signature" style="min-width: 200px; height: 60px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px;"></div>
-                    <div style="border-top: 1px solid #1f2937; padding-top: 8px; width: 200px;">
-                        <p style="margin: 0; font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 1px; font-family: Arial, sans-serif;">Authorized Signature</p>
+                    <!-- Client Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Client</label>
+                        <select id="invoice-client" class="input-luxe w-full px-4 py-3 rounded-xl" onchange="fillClientDetails()">
+                            <option value="">Select a client...</option>
+                        </select>
+                        <p class="text-xs text-gray-400 mt-1">Or <a href="#" onclick="showQuickAddClient()" class="text-rose-500 hover:underline">add a new client</a></p>
                     </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" id="invoice-email" class="input-luxe w-full px-4 py-3 rounded-xl">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Event Date</label>
+                            <input type="date" id="invoice-event-date" class="input-luxe w-full px-4 py-3 rounded-xl">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Venue / Notes</label>
+                        <textarea id="invoice-notes" rows="2" class="input-luxe w-full px-4 py-3 rounded-xl resize-none" placeholder="The Grand Ballroom, Downtown..."></textarea>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Invoice Date</label>
+                            <input type="date" id="invoice-date" class="input-luxe w-full px-4 py-3 rounded-xl bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Terms</label>
+                            <select id="invoice-terms" class="input-luxe w-full px-4 py-3 rounded-xl bg-white">
+                                <option value="0">Due on Receipt</option>
+                                <option value="7">Net 7</option>
+                                <option value="14">Net 14</option>
+                                <option value="30" selected>Net 30</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select id="invoice-status" class="input-luxe w-full px-4 py-3 rounded-xl bg-white">
+                                <option value="draft">Draft</option>
+                                <option value="pending" selected>Sent (Pending)</option>
+                                <option value="paid">Paid</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Line Items -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Services</label>
+                        
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <button onclick="quickAddLine('Bridal Makeup', 350)" class="px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full text-sm font-medium hover:bg-rose-100 transition">Bridal $350</button>
+                            <button onclick="quickAddLine('Bridal Trial', 150)" class="px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full text-sm font-medium hover:bg-rose-100 transition">Trial $150</button>
+                            <button onclick="quickAddLine('Bridesmaid', 120)" class="px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full text-sm font-medium hover:bg-rose-100 transition">Bridesmaid $120</button>
+                            <button onclick="quickAddLine('Engagement', 200)" class="px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full text-sm font-medium hover:bg-rose-100 transition">Engagement $200</button>
+                            <button onclick="quickAddLine('Travel Fee', 75)" class="px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full text-sm font-medium hover:bg-rose-100 transition">Travel $75</button>
+                        </div>
+                        
+                        <div id="modal-line-items" class="space-y-2 mb-3">
+                            <!-- Line items -->
+                        </div>
+                        
+                        <button onclick="addModalLineItem()" class="w-full py-3 border-2 border-dashed border-rose-200 rounded-xl text-rose-600 font-medium hover:bg-rose-50 transition">
+                            + Add Service
+                        </button>
+                    </div>
+                    
+                    <!-- Totals -->
+                    <div class="bg-gray-50 rounded-xl p-4 space-y-2">
+                        <div class="flex justify-between text-gray-600">
+                            <span>Subtotal</span>
+                            <span id="modal-subtotal" class="font-medium">$0.00</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="modal-surcharge" class="rounded text-rose-500" onchange="calculateModalTotals()">
+                            <span class="text-sm text-gray-600">Add processing fee</span>
+                            <input type="number" id="modal-surcharge-pct" value="3" class="w-16 px-2 py-1 text-sm border rounded text-center" onchange="calculateModalTotals()">
+                            <span class="text-sm text-gray-600">%</span>
+                        </div>
+                        <div id="modal-surcharge-row" class="flex justify-between text-amber-600 hidden">
+                            <span>Processing Fee</span>
+                            <span id="modal-surcharge-amt">$0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center pt-2 border-t border-gray-200">
+                            <span class="font-semibold text-gray-900">Total</span>
+                            <span id="modal-total" class="text-2xl font-bold text-rose-600">$0.00</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Link -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Payment Link (Stripe/PayPal)</label>
+                        <input type="url" id="invoice-payment-link" placeholder="https://..." class="input-luxe w-full px-4 py-3 rounded-xl">
+                    </div>
+                    
                 </div>
-            </div>
-            
-            
-            <div style="margin-top: 50px; text-align: center; padding-top: 30px; border-top: 1px solid #e5e7eb;">
-                <p style="margin: 0; color: #e11d48; font-size: 14px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;">Kimberly Wilson</p>
-                <p style="margin: 5px 0 0 0; color: #9ca3af; font-size: 12px; font-family: Arial, sans-serif;">@thamakeupartist | Professional Makeup Artistry</p>
-                <p style="margin: 15px 0 0 0; color: #9ca3af; font-size: 11px; font-family: Arial, sans-serif; font-style: italic;">Thank you for your business!</p>
+                
+                <!-- Modal Footer -->
+                <div class="border-t border-gray-100 p-4 flex gap-3">
+                    <button onclick="closeInvoiceModal()" class="flex-1 py-3 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+                    <button onclick="saveInvoice()" class="flex-1 btn-primary py-3 rounded-xl text-white font-semibold">Save Invoice</button>
+                </div>
+                
             </div>
         </div>
     </div>
 
-    
+    <!-- CLIENT MODAL -->
+    <div id="client-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden overflow-y-auto">
+        <div class="min-h-screen px-4 py-8 flex items-center justify-center">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+                <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">Add New Client</h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Name *</label>
+                        <input type="text" id="client-name" class="input-luxe w-full px-4 py-3 rounded-xl" placeholder="Sarah Johnson">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                        <input type="email" id="client-email" class="input-luxe w-full px-4 py-3 rounded-xl" placeholder="sarah@email.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                        <input type="tel" id="client-phone" class="input-luxe w-full px-4 py-3 rounded-xl" placeholder="(555) 123-4567">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                        <textarea id="client-notes" rows="2" class="input-luxe w-full px-4 py-3 rounded-xl resize-none" placeholder="Bridal party of 6, allergic to certain products..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 mt-6">
+                    <button onclick="closeClientModal()" class="flex-1 py-3 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+                    <button onclick="saveClient()" class="flex-1 btn-primary py-3 rounded-xl text-white font-semibold">Save Client</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- INVOICE PREVIEW MODAL -->
+    <div id="preview-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden overflow-y-auto">
+        <div class="min-h-screen px-4 py-8 flex items-start justify-center">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden">
+                <div class="sticky top-0 bg-white border-b border-gray-100 p-4 flex items-center justify-between">
+                    <h3 class="font-semibold text-lg">Invoice Preview</h3>
+                    <div class="flex gap-2">
+                        <button onclick="downloadInvoicePDF()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium text-sm flex items-center gap-2">
+                            <i class="fas fa-download"></i> PDF
+                        </button>
+                        <button onclick="closePreviewModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="preview-content" class="p-8 bg-gray-50">
+                    <!-- Invoice renders here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2">
+        <i class="fas fa-check-circle text-green-400"></i>
+        <span id="toast-message">Saved!</span>
+    </div>
+
+    <script>
+        // ==========================================
+        // DATA STORE
+        // ==========================================
+        
+        let invoices = JSON.parse(localStorage.getItem('kw_invoices') || '[]');
+        let clients = JSON.parse(localStorage.getItem('kw_clients') || '[]');
+        let currentInvoiceId = null;
+        let currentView = 'dashboard';
+        let currentFilter = 'all';
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStats();
+            renderRecentInvoices();
+            renderInvoicesList();
+            renderClientsList();
+            updateCharts();
+            populateClientSelect();
+        });
+        
+        // ==========================================
+        // NAVIGATION
+        // ==========================================
+        
+        function showView(view) {
+            // Hide all views
+            document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+            document.getElementById(`view-${view}`).classList.remove('hidden');
+            
+            // Update nav
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(`nav-${view}`).classList.add('active');
+            
+            // Update mobile
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            document.getElementById('sidebar-overlay').classList.add('hidden');
+            
+            currentView = view;
+            
+            if (view === 'analytics') {
+                setTimeout(updateCharts, 100);
+            }
+        }
+        
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+        
+        // ==========================================
+        // STATS & DASHBOARD
+        // ==========================================
+        
+        function updateStats() {
+            const now = new Date();
+            const thisMonth = invoices.filter(inv => {
+                const invDate = new Date(inv.date);
+                return invDate.getMonth() === now.getMonth() && invDate.getFullYear() === now.getFullYear();
+            });
+            
+            const monthRevenue = thisMonth
+                .filter(inv => inv.status === 'paid')
+                .reduce((sum, inv) => sum + inv.total, 0);
+            
+            const outstanding = invoices
+                .filter(inv => inv.status === 'pending' || inv.status === 'overdue')
+                .reduce((sum, inv) => sum + inv.total, 0);
+            
+            const paidInvoices = invoices.filter(inv => inv.status === 'paid').length;
+            const totalInvoices = invoices.length;
+            const paidRate = totalInvoices > 0 ? Math.round((paidInvoices / totalInvoices) * 100) : 0;
+            
+            document.getElementById('stat-month').textContent = '$' + monthRevenue.toLocaleString();
+            document.getElementById('stat-outstanding').textContent = '$' + outstanding.toLocaleString();
+            document.getElementById('stat-clients').textContent = clients.length;
+            document.getElementById('stat-rate').textContent = paidRate + '%';
+            
+            // Update counts
+            if (invoices.length > 0) {
+                document.getElementById('invoice-count').textContent = invoices.length;
+                document.getElementById('invoice-count').classList.remove('hidden');
+            }
+            if (clients.length > 0) {
+                document.getElementById('client-count').textContent = clients.length;
+                document.getElementById('client-count').classList.remove('hidden');
+            }
+            
+            // Overdue count
+            const overdueCount = invoices.filter(inv => inv.status === 'overdue').length;
+            document.getElementById('overdue-count').textContent = overdueCount > 0 ? `${overdueCount} overdue` : 'No overdue invoices';
+        }
+        
+        function renderRecentInvoices() {
+            const container = document.getElementById('recent-invoices-list');
+            const empty = document.getElementById('empty-recent');
+            
+            if (invoices.length === 0) {
+                container.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            
+            empty.classList.add('hidden');
+            const recent = invoices.slice(-5).reverse();
+            
+            container.innerHTML = recent.map(inv => `
+                <div onclick="viewInvoice('${inv.id}')" class="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 hover:border-rose-200 hover:shadow-md transition cursor-pointer">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 font-semibold text-sm">
+                            ${inv.clientName.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-900">${inv.clientName}</p>
+                            <p class="text-sm text-gray-500">#${inv.invoiceNumber} • ${new Date(inv.date).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold text-gray-900">$${inv.total.toFixed(2)}</p>
+                        <span class="status-badge status-${inv.status}">${inv.status}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // ==========================================
+        // INVOICE MANAGEMENT
+        // ==========================================
+        
+        function createNewInvoice() {
+            currentInvoiceId = null;
+            document.getElementById('modal-title').textContent = 'New Invoice';
+            
+            // Clear form
+            document.getElementById('invoice-client').value = '';
+            document.getElementById('invoice-email').value = '';
+            document.getElementById('invoice-event-date').value = '';
+            document.getElementById('invoice-notes').value = '';
+            document.getElementById('invoice-date').valueAsDate = new Date();
+            document.getElementById('invoice-terms').value = '30';
+            document.getElementById('invoice-status').value = 'pending';
+            document.getElementById('invoice-payment-link').value = '';
+            
+            // Clear line items
+            document.getElementById('modal-line-items').innerHTML = '';
+            addModalLineItem();
+            
+            calculateModalTotals();
+            
+            document.getElementById('invoice-modal').classList.remove('hidden');
+        }
+        
+        function editInvoice(id) {
+            const inv = invoices.find(i => i.id === id);
+            if (!inv) return;
+            
+            currentInvoiceId = id;
+            document.getElementById('modal-title').textContent = `Edit Invoice #${inv.invoiceNumber}`;
+            
+            document.getElementById('invoice-client').value = inv.clientId || '';
+            document.getElementById('invoice-email').value = inv.clientEmail;
+            document.getElementById('invoice-event-date').value = inv.eventDate || '';
+            document.getElementById('invoice-notes').value = inv.notes || '';
+            document.getElementById('invoice-date').value = inv.date;
+            document.getElementById('invoice-terms').value = inv.terms;
+            document.getElementById('invoice-status').value = inv.status;
+            document.getElementById('invoice-payment-link').value = inv.paymentLink || '';
+            
+            // Line items
+            const container = document.getElementById('modal-line-items');
+            container.innerHTML = '';
+            inv.items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'flex gap-2 items-center';
+                div.innerHTML = `
+                    <input type="text" value="${item.description}" placeholder="Service" class="flex-1 px-3 py-2 border rounded-lg text-sm">
+                    <input type="number" value="${item.qty}" placeholder="Qty" class="w-16 px-3 py-2 border rounded-lg text-sm text-center">
+                    <input type="number" value="${item.price}" placeholder="Price" class="w-24 px-3 py-2 border rounded-lg text-sm">
+                    <button onclick="this.parentElement.remove(); calculateModalTotals()" class="text-gray-400 hover:text-red-500">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+            
+            calculateModalTotals();
+            document.getElementById('invoice-modal').classList.remove('hidden');
+        }
+        
+        function closeInvoiceModal() {
+            document.getElementById('invoice-modal').classList.add('hidden');
+        }
+        
+        function addModalLineItem(desc = '', qty = 1, price = '') {
+            const container = document.getElementById('modal-line-items');
+            const div = document.createElement('div');
+            div.className = 'flex gap-2 items-center modal-line-item';
+            div.innerHTML = `
+                <input type="text" value="${desc}" placeholder="Service description" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm input-luxe">
+                <input type="number" value="${qty}" placeholder="Qty" class="w-16 px-3 py-2 border border-gray-200 rounded-lg text-sm text-center input-luxe" onchange="calculateModalTotals()">
+                <input type="number" value="${price}" placeholder="Price" class="w-24 px-3 py-2 border border-gray-200 rounded-lg text-sm input-luxe" onchange="calculateModalTotals()">
+                <button onclick="this.parentElement.remove(); calculateModalTotals()" class="text-gray-400 hover:text-red-500 w-8">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        }
+        
+        function quickAddLine(desc, price) {
+            addModalLineItem(desc, 1, price);
+            calculateModalTotals();
+        }
+        
+        function calculateModalTotals() {
+            const items = document.querySelectorAll('.modal-line-item');
+            let subtotal = 0;
+            
+            items.forEach(item => {
+                const inputs = item.querySelectorAll('input');
+                const qty = parseFloat(inputs[1].value) || 0;
+                const price = parseFloat(inputs[2].value) || 0;
+                subtotal += qty * price;
+            });
+            
+            document.getElementById('modal-subtotal').textContent = '$' + subtotal.toFixed(2);
+            
+            const surchargeEnabled = document.getElementById('modal-surcharge').checked;
+            const surchargePct = parseFloat(document.getElementById('modal-surcharge-pct').value) || 0;
+            const surchargeAmt = surchargeEnabled ? (subtotal * surchargePct / 100) : 0;
+            
+            document.getElementById('modal-surcharge-row').classList.toggle('hidden', !surchargeEnabled);
+            document.getElementById('modal-surcharge-amt').textContent = '$' + surchargeAmt.toFixed(2);
+            
+            const total = subtotal + surchargeAmt;
+            document.getElementById('modal-total').textContent = '$' + total.toFixed(2);
+        }
+        
+        function saveInvoice() {
+            const clientId = document.getElementById('invoice-client').value;
+            const client = clients.find(c => c.id === clientId);
+            
+            const items = [];
+            document.querySelectorAll('.modal-line-item').forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                items.push({
+                    description: inputs[0].value,
+                    qty: parseFloat(inputs[1].value) || 0,
+                    price: parseFloat(inputs[2].value) || 0
+                });
+            });
+            
+            const subtotal = items.reduce((sum, i) => sum + (i.qty * i.price), 0);
+            const surchargeEnabled = document.getElementById('modal-surcharge').checked;
+            const surchargePct = parseFloat(document.getElementById('modal-surcharge-pct').value) || 0;
+            const surchargeAmt = surchargeEnabled ? (subtotal * surchargePct / 100) : 0;
+            
+            const invoiceData = {
+                id: currentInvoiceId || Date.now().toString(),
+                invoiceNumber: currentInvoiceId ? invoices.find(i => i.id === currentInvoiceId).invoiceNumber : getNextInvoiceNumber(),
+                clientId: clientId,
+                clientName: client ? client.name : document.getElementById('invoice-client').options[document.getElementById('invoice-client').selectedIndex]?.text || 'Unknown',
+                clientEmail: document.getElementById('invoice-email').value,
+                clientPhone: client?.phone || '',
+                eventDate: document.getElementById('invoice-event-date').value,
+                notes: document.getElementById('invoice-notes').value,
+                date: document.getElementById('invoice-date').value,
+                terms: document.getElementById('invoice-terms').value,
+                status: document.getElementById('invoice-status').value,
+                paymentLink: document.getElementById('invoice-payment-link').value,
+                items: items,
+                subtotal: subtotal,
+                surcharge: surchargeAmt,
+                total: subtotal + surchargeAmt,
+                createdAt: currentInvoiceId ? invoices.find(i => i.id === currentInvoiceId).createdAt : new Date().toISOString()
+            };
+            
+            // Check for overdue
+            const dueDate = new Date(invoiceData.date);
+            dueDate.setDate(dueDate.getDate() + parseInt(invoiceData.terms));
+            if (invoiceData.status === 'pending' && dueDate < new Date()) {
+                invoiceData.status = 'overdue';
+            }
+            
+            if (currentInvoiceId) {
+                const idx = invoices.findIndex(i => i.id === currentInvoiceId);
+                invoices[idx] = invoiceData;
+            } else {
+                invoices.push(invoiceData);
+            }
+            
+            localStorage.setItem('kw_invoices', JSON.stringify(invoices));
+            
+            closeInvoiceModal();
+            updateStats();
+            renderRecentInvoices();
+            renderInvoicesList();
+            showToast(currentInvoiceId ? 'Invoice updated' : 'Invoice created');
+        }
+        
+        function getNextInvoiceNumber() {
+            const nums = invoices.map(i => parseInt(i.invoiceNumber) || 0);
+            const max = Math.max(0, ...nums);
+            return String(max + 1).padStart(3, '0');
+        }
+        
+        function deleteInvoice(id) {
+            if (!confirm('Delete this invoice?')) return;
+            invoices = invoices.filter(i => i.id !== id);
+            localStorage.setItem('kw_invoices', JSON.stringify(invoices));
+            updateStats();
+            renderRecentInvoices();
+            renderInvoicesList();
+            showToast('Invoice deleted');
+        }
+        
+        function markAsPaid(id) {
+            const inv = invoices.find(i => i.id === id);
+            if (inv) {
+                inv.status = 'paid';
+                inv.paidAt = new Date().toISOString();
+                localStorage.setItem('kw_invoices', JSON.stringify(invoices));
+                updateStats();
+                renderRecentInvoices();
+                renderInvoicesList();
+                showToast('Marked as paid!');
+            }
+        }
+        
+        // ==========================================
+        // INVOICE LIST & FILTERING
+        // ==========================================
+        
+        function renderInvoicesList() {
+            const container = document.getElementById('invoices-list');
+            const empty = document.getElementById('empty-invoices');
+            
+            let filtered = invoices;
+            if (currentFilter !== 'all') {
+                filtered = invoices.filter(i => i.status === currentFilter);
+            }
+            
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            
+            empty.classList.add('hidden');
+            
+            container.innerHTML = filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).map(inv => `
+                <div class="glass-panel rounded-xl p-4 card-hover">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-rose-100 to-rose-200 flex items-center justify-center text-rose-700 font-bold">
+                                ${inv.clientName.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-semibold text-gray-900">${inv.clientName}</h3>
+                                    <span class="status-badge status-${inv.status}">${inv.status}</span>
+                                </div>
+                                <p class="text-sm text-gray-500">Invoice #${inv.invoiceNumber} • Due ${new Date(inv.date).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-4">
+                            <div class="text-right">
+                                <p class="text-xl font-bold text-gray-900">$${inv.total.toFixed(2)}</p>
+                                <p class="text-xs text-gray-500">${inv.items.length} item${inv.items.length !== 1 ? 's' : ''}</p>
+                            </div>
+                            
+                            <div class="flex gap-2">
+                                ${inv.status !== 'paid' ? `
+                                    <button onclick="markAsPaid('${inv.id}')" class="w-10 h-10 rounded-full bg-green-100 text-green-600 hover:bg-green-200 flex items-center justify-center" title="Mark as Paid">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                ` : ''}
+                                <button onclick="viewInvoice('${inv.id}')" class="w-10 h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center justify-center" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button onclick="editInvoice('${inv.id}')" class="w-10 h-10 rounded-full bg-rose-100 text-rose-600 hover:bg-rose-200 flex items-center justify-center" title="Edit">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                                <button onclick="deleteInvoice('${inv.id}')" class="w-10 h-10 rounded-full bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function filterInvoices(status) {
+            currentFilter = status;
+            
+            // Update buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-rose-500', 'text-white');
+                btn.classList.add('bg-white', 'text-gray-600');
+            });
+            document.getElementById(`filter-${status}`).classList.remove('bg-white', 'text-gray-600');
+            document.getElementById(`filter-${status}`).classList.add('bg-rose-500', 'text-white');
+            
+            renderInvoicesList();
+        }
+        
+        function showOverdueInvoices() {
+            showView('invoices');
+            filterInvoices('overdue');
+        }
+        
+        // ==========================================
+        // CLIENT MANAGEMENT
+        // ==========================================
+        
+        function showAddClientModal() {
+            document.getElementById('client-name').value = '';
+            document.getElementById('client-email').value = '';
+            document.getElementById('client-phone').value = '';
+            document.getElementById('client-notes').value = '';
+            document.getElementById('client-modal').classList.remove('hidden');
+        }
+        
+        function closeClientModal() {
+            document.getElementById('client-modal').classList.add('hidden');
+        }
+        
+        function saveClient() {
+            const name = document.getElementById('client-name').value.trim();
+            const email = document.getElementById('client-email').value.trim();
+            
+            if (!name || !email) {
+                alert('Name and email are required');
+                return;
+            }
+            
+            const client = {
+                id: Date.now().toString(),
+                name: name,
+                email: email,
+                phone: document.getElementById('client-phone').value,
+                notes: document.getElementById('client-notes').value,
+                createdAt: new Date().toISOString()
+            };
+            
+            clients.push(client);
+            localStorage.setItem('kw_clients', JSON.stringify(clients));
+            
+            closeClientModal();
+            updateStats();
+            renderClientsList();
+            populateClientSelect();
+            showToast('Client added');
+        }
+        
+        function renderClientsList() {
+            const container = document.getElementById('clients-list');
+            const empty = document.getElementById('empty-clients');
+            const searchTerm = document.getElementById('client-search')?.value.toLowerCase() || '';
+            
+            let filtered = clients;
+            if (searchTerm) {
+                filtered = clients.filter(c => 
+                    c.name.toLowerCase().includes(searchTerm) || 
+                    c.email.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                empty.classList.toggle('hidden', searchTerm === '');
+                return;
+            }
+            
+            empty.classList.add('hidden');
+            
+            container.innerHTML = filtered.map(client => {
+                const clientInvoices = invoices.filter(i => i.clientId === client.id);
+                const totalRevenue = clientInvoices
+                    .filter(i => i.status === 'paid')
+                    .reduce((sum, i) => sum + i.total, 0);
+                
+                return `
+                    <div class="glass-panel rounded-xl p-5 card-hover">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center text-purple-700 font-bold text-lg">
+                                ${client.name.charAt(0).toUpperCase()}
+                            </div>
+                            <button onclick="createInvoiceForClient('${client.id}')" class="text-rose-500 hover:text-rose-700 text-sm font-medium">
+                                + Invoice
+                            </button>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-1">${client.name}</h3>
+                        <p class="text-sm text-gray-500 mb-3">${client.email}</p>
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-400">${clientInvoices.length} invoices</span>
+                            <span class="font-semibold text-gray-700">$${totalRevenue.toFixed(2)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function searchClients(term) {
+            renderClientsList();
+        }
+        
+        function populateClientSelect() {
+            const select = document.getElementById('invoice-client');
+            select.innerHTML = '<option value="">Select a client...</option>' + 
+                clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        }
+        
+        function fillClientDetails() {
+            const clientId = document.getElementById('invoice-client').value;
+            const client = clients.find(c => c.id === clientId);
+            if (client) {
+                document.getElementById('invoice-email').value = client.email;
+            }
+        }
+        
+        function createInvoiceForClient(clientId) {
+            document.getElementById('invoice-client').value = clientId;
+            fillClientDetails();
+            createNewInvoice();
+        }
+        
+        function showQuickAddClient() {
+            closeInvoiceModal();
+            setTimeout(() => showAddClientModal(), 300);
+        }
+        
+        // ==========================================
+        // INVOICE PREVIEW & PDF
+        // ==========================================
+        
+        function viewInvoice(id) {
+            const inv = invoices.find(i => i.id === id);
+            if (!inv) return;
+            
+            const dueDate = new Date(inv.date);
+            dueDate.setDate(dueDate.getDate() + parseInt(inv.terms));
+            
+            const html = `
+                <div class="bg-white p-8 max-w-2xl mx-auto" style="font-family: 'Playfair Display', serif;">
+                    <div class="text-center mb-8 pb-6 border-b-2 border-rose-200">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-rose-400 to-rose-600 rounded-full flex items-center justify-center text-white text-2xl">
+                            💋
+                        </div>
+                        <h1 class="text-3xl font-bold text-gray-900 mb-1">KIMBERLY WILSON</h1>
+                        <p class="text-rose-500 text-sm tracking-widest uppercase">@thamakeupartist</p>
+                    </div>
+                    
+                    <div class="flex justify-between mb-8">
+                        <div>
+                            <p class="text-xs uppercase text-gray-400 mb-1">Invoice To</p>
+                            <h2 class="font-bold text-gray-900 text-lg">${inv.clientName}</h2>
+                            <p class="text-gray-600">${inv.clientEmail}</p>
+                            ${inv.notes ? `<p class="text-gray-500 text-sm mt-2">${inv.notes}</p>` : ''}
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs uppercase text-gray-400 mb-1">Invoice #${inv.invoiceNumber}</p>
+                            <p class="text-gray-600 text-sm">Date: ${new Date(inv.date).toLocaleDateString()}</p>
+                            <p class="text-rose-600 font-semibold">Due: ${dueDate.toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    
+                    <table class="w-full mb-6">
+                        <thead>
+                            <tr class="border-b-2 border-gray-200">
+                                <th class="text-left py-2 text-xs uppercase text-gray-400 font-normal">Service</th>
+                                <th class="text-center py-2 text-xs uppercase text-gray-400 font-normal">Qty</th>
+                                <th class="text-right py-2 text-xs uppercase text-gray-400 font-normal">Price</th>
+                                <th class="text-right py-2 text-xs uppercase text-gray-400 font-normal">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${inv.items.map(item => `
+                                <tr class="border-b border-gray-100">
+                                    <td class="py-3 text-gray-800">${item.description}</td>
+                                    <td class="py-3 text-center text-gray-600">${item.qty}</td>
+                                    <td class="py-3 text-right text-gray-600">$${item.price.toFixed(2)}</td>
+                                    <td class="py-3 text-right font-medium">$${(item.qty * item.price).toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    
+                    <div class="border-t-2 border-gray-200 pt-4 space-y-2">
+                        <div class="flex justify-between text-gray-600">
+                            <span>Subtotal</span>
+                            <span>$${inv.subtotal.toFixed(2)}</span>
+                        </div>
+                        ${inv.surcharge > 0 ? `
+                            <div class="flex justify-between text-amber-600">
+                                <span>Processing Fee</span>
+                                <span>$${inv.surcharge.toFixed(2)}</span>
+                            </div>
+                        ` : ''}
+                        <div class="flex justify-between items-center pt-2 border-t border-gray-200">
+                            <span class="font-bold text-gray-900">Total Due</span>
+                            <span class="text-2xl font-bold text-rose-600">$${inv.total.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    
+                    ${inv.paymentLink ? `
+                        <div class="mt-8 p-4 bg-gray-50 rounded-lg text-center">
+                            <p class="text-sm text-gray-600 mb-2">Pay online:</p>
+                            <a href="${inv.paymentLink}" class="text-rose-600 font-medium break-all">${inv.paymentLink}</a>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="mt-8 text-center text-gray-400 text-sm">
+                        <p>Thank you for choosing my artistry</p>
+                        <p class="mt-1">@thamakeupartist</p>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('preview-content').innerHTML = html;
+            document.getElementById('preview-modal').classList.remove('hidden');
+            document.getElementById('preview-modal').dataset.currentInvoiceId = id;
+        }
+        
+        function closePreviewModal() {
+            document.getElementById('preview-modal').classList.add('hidden');
+        }
+        
+        function downloadInvoicePDF() {
+            const element = document.getElementById('preview-content').firstElementChild;
+            
+            html2pdf().set({
+                margin: 0.5,
+                filename: `Kimberly-Wilson-Invoice-${document.getElementById('preview-modal').dataset.currentInvoiceId}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            }).from(element).save();
+        }
+        
+        // ==========================================
+        // ANALYTICS & CHARTS
+        // ==========================================
+        
+        function updateCharts() {
+            // Revenue by month
+            const months = {};
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            invoices.filter(i => i.status === 'paid').forEach(inv => {
+                const date = new Date(inv.paidAt || inv.date);
+                const key = monthNames[date.getMonth()];
+                months[key] = (months[key] || 0) + inv.total;
+            });
+            
+            const ctx1 = document.getElementById('revenueChart');
+            if (ctx1) {
+                new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(months).length ? Object.keys(months) : monthNames,
+                        datasets: [{
+                            label: 'Revenue ($)',
+                            data: Object.keys(months).length ? Object.values(months) : Array(12).fill(0),
+                            backgroundColor: 'rgba(244, 63, 94, 0.8)',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            }
+            
+            // Top clients
+            const clientRevenue = {};
+            invoices.filter(i => i.status === 'paid').forEach(inv => {
+                clientRevenue[inv.clientName] = (clientRevenue[inv.clientName] || 0) + inv.total;
+            });
+            
+            const topClients = Object.entries(clientRevenue)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+            
+            document.getElementById('top-clients-list').innerHTML = topClients.map(([name, revenue], i) => `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 font-bold text-sm">
+                            ${i + 1}
+                        </div>
+                        <span class="font-medium text-gray-700">${name}</span>
+                    </div>
+                    <span class="font-bold text-gray-900">$${revenue.toFixed(0)}</span>
+                </div>
+            `).join('') || '<p class="text-gray-500 text-sm">No paid invoices yet</p>';
+            
+            // Services breakdown
+            const services = {};
+            invoices.filter(i => i.status === 'paid').forEach(inv => {
+                inv.items.forEach(item => {
+                    services[item.description] = (services[item.description] || 0) + (item.qty * item.price);
+                });
+            });
+            
+            const topServices = Object.entries(services).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            
+            document.getElementById('services-list').innerHTML = topServices.map(([name, revenue]) => `
+                <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span class="text-gray-700 text-sm">${name}</span>
+                    <span class="font-medium text-gray-900">$${revenue.toFixed(0)}</span>
+                </div>
+            `).join('') || '<p class="text-gray-500 text-sm">No data yet</p>';
+            
+            const ctx2 = document.getElementById('servicesChart');
+            if (ctx2 && topServices.length) {
+                new Chart(ctx2, {
+                    type: 'doughnut',
+                    data: {
+                        labels: topServices.map(s => s[0]),
+                        datasets: [{
+                            data: topServices.map(s => s[1]),
+                            backgroundColor: ['#f43f5e', '#fb7185', '#fda4af', '#fecdd3', '#ffe4e6']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+            }
+        }
+        
+        // ==========================================
+        // UTILITIES
+        // ==========================================
+        
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+        
+        // Close modals on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeInvoiceModal();
+                closeClientModal();
+                closePreviewModal();
+            }
+        });
+    </script>
+</body>
+</html>
