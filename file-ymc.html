@@ -1,0 +1,297 @@
+
+    
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-4">
+            <div class="text-center">
+                <h1 class="text-2xl font-bold text-gray-800 brand-header tracking-wide">KIMBERLY WILSON</h1>
+                <p class="text-rose-500 font-medium text-sm tracking-widest">@THAMAKEUPARTIST</p>
+            </div>
+            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                #<span id="headerInvoiceNum">001</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-6 pb-32">
+        
+        
+        <section class="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <span class="w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm">1</span>
+                Client Details
+            </h2>
+            
+            <div class="grid gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
+                    <input type="text" id="clientName" placeholder="Jane Smith" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                    <input type="email" id="clientEmail" placeholder="jane@example.com" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                    <textarea id="clientAddress" rows="2" placeholder="123 Main St, City, State 12345" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition resize-none"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Invoice Date</label>
+                        <input type="date" id="invoiceDate" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Payment Terms</label>
+                        <select id="paymentTerms" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition bg-white">
+                            <option value="0">Due on Receipt</option>
+                            <option value="7">Net 7</option>
+                            <option value="14">Net 14</option>
+                            <option value="30" selected="">Net 30</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                    <input type="text" id="dueDate" readonly="" class="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg text-gray-600 font-medium">
+                </div>
+            </div>
+        </section>
+
+        
+        <section class="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <span class="w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm">2</span>
+                Services
+            </h2>
+            
+            
+            <div class="mb-4 p-4 bg-rose-50 rounded-lg">
+                <p class="text-sm text-rose-800 font-medium mb-2">Quick Add Services:</p>
+                <div class="flex flex-wrap gap-2">
+                    <button class="px-3 py-1.5 bg-white border border-rose-200 rounded-full text-sm text-rose-700 hover:bg-rose-100 transition">
+                        Bridal ($350)
+                    </button>
+                    <button class="px-3 py-1.5 bg-white border border-rose-200 rounded-full text-sm text-rose-700 hover:bg-rose-100 transition">
+                        Trial ($120)
+                    </button>
+                    <button class="px-3 py-1.5 bg-white border border-rose-200 rounded-full text-sm text-rose-700 hover:bg-rose-100 transition">
+                        Travel ($50)
+                    </button>
+                </div>
+            </div>
+            
+            
+            <div id="lineItemsContainer" class="space-y-3">
+                
+            </div>
+            
+            
+            <button class="mt-4 btn-secondary border-2 border-dashed border-gray-300 hover:border-rose-400">
+                + Add Line Item
+            </button>
+            
+            
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-600">Subtotal:</span>
+                    <span id="subtotalDisplay" class="font-medium">$0.00</span>
+                </div>
+                
+                
+                <div class="flex items-center gap-3 mb-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <input type="checkbox" id="surchargeToggle" class="w-5 h-5 text-rose-500 rounded focus:ring-rose-500">
+                    <div class="flex-1">
+                        <label class="text-sm font-medium text-amber-900">Add Card Processing Fee</label>
+                        <div class="flex items-center gap-2 mt-1">
+                            <input type="number" id="surchargePercent" value="3" min="0" max="100" class="w-16 px-2 py-1 text-sm border border-amber-300 rounded text-center">
+                            <span class="text-sm text-amber-800">% surcharge</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="surchargeRow" class="flex justify-between items-center mb-2 text-amber-700 hidden">
+                    <span class="text-sm">Processing Fee:</span>
+                    <span id="surchargeDisplay" class="font-medium">$0.00</span>
+                </div>
+                
+                <div class="flex justify-between items-center pt-3 border-t-2 border-gray-200">
+                    <span class="text-lg font-bold text-gray-800">Total Due:</span>
+                    <span id="totalDisplay" class="text-2xl font-bold text-rose-600">$0.00</span>
+                </div>
+            </div>
+        </section>
+
+        
+        <section class="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <span class="w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm">3</span>
+                Payment
+            </h2>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Payment Link (Stripe/PayPal/Venmo)</label>
+                <input type="url" id="paymentLink" placeholder="https://stripe.com/pay/..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition">
+                <p class="text-xs text-gray-500 mt-1">Paste your payment URL here for the QR code</p>
+            </div>
+            
+            <button class="btn-secondary mb-4">
+                Generate QR Code
+            </button>
+            
+            <div id="qrContainer" class="hidden flex flex-col items-center p-4 bg-gray-50 rounded-lg">
+                <div id="qrcode"></div>
+                <p class="text-xs text-gray-500 mt-2">Scan to pay</p>
+            </div>
+        </section>
+
+        
+        <section class="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <span class="w-6 h-6 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-sm">4</span>
+                Signature
+            </h2>
+            
+            <div class="mb-4">
+                <canvas id="signaturePad" class="signature-pad w-full h-40 bg-white"></canvas>
+                <div class="flex gap-2 mt-3">
+                    <button class="flex-1 py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition">
+                        Clear
+                    </button>
+                    <button class="flex-1 py-2 px-4 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-sm font-medium transition">
+                        Save Signature
+                    </button>
+                </div>
+            </div>
+            <div id="signatureStatus" class="text-sm text-green-600 font-medium hidden">✓ Signature saved</div>
+        </section>
+
+        
+        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg no-print">
+            <div class="max-w-4xl mx-auto grid grid-cols-2 gap-3">
+                <button class="py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition text-sm">
+                    💾 Save Draft
+                </button>
+                <button class="py-3 px-4 bg-rose-500 hover:bg-rose-600 text-white font-medium rounded-lg transition text-sm">
+                    👁️ Preview
+                </button>
+                <button class="py-3 px-4 bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg transition text-sm col-span-2 flex items-center justify-center gap-2">
+                    📄 Download PDF
+                </button>
+                <button class="py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition text-sm col-span-2 flex items-center justify-center gap-2">
+                    ✉️ Open Email Client
+                </button>
+            </div>
+        </div>
+
+        
+        <div id="previewModal" class="fixed inset-0 bg-black/50 z-50 hidden overflow-y-auto">
+            <div class="min-h-screen px-4 py-8 flex items-center justify-center">
+                <div class="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
+                        <h3 class="font-bold text-lg">Invoice Preview</h3>
+                        <button class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+                    </div>
+                    <div class="p-6" id="previewContent">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    
+    <div id="invoiceTemplate" class="hidden">
+        <div class="invoice-preview p-8 max-w-3xl mx-auto" style="font-family: Georgia, 'Times New Roman', serif;">
+            
+            <div class="text-center mb-8 pb-6 border-b-2 border-rose-200">
+                <h1 style="font-size: 32px; color: #1f2937; margin: 0; font-weight: bold; letter-spacing: 3px; text-transform: uppercase;">Kimberly Wilson</h1>
+                <p style="color: #e11d48; margin: 8px 0 0 0; font-size: 14px; letter-spacing: 4px; text-transform: uppercase; font-weight: 600;">@thamakeupartist</p>
+                <p style="color: #9ca3af; margin: 8px 0 0 0; font-size: 12px; font-family: Arial, sans-serif;">Professional Makeup Artistry</p>
+            </div>
+            
+            
+            <div class="flex justify-between items-start mb-8">
+                <div>
+                    <h2 style="font-size: 24px; color: #e11d48; margin: 0; font-weight: bold; font-family: Arial, sans-serif;">INVOICE</h2>
+                    <p style="color: #666; margin: 5px 0 0 0; font-family: Arial, sans-serif;">Invoice #: <span class="inv-num" style="font-weight: bold;">001</span></p>
+                </div>
+                <div style="text-align: right; font-family: Arial, sans-serif;">
+                    <p style="margin: 0; color: #666;">Date: <span class="inv-date" style="font-weight: 600; color: #333;">--</span></p>
+                    <p style="margin: 5px 0 0 0; color: #666;">Due: <span class="inv-due" style="font-weight: 600; color: #e11d48;">--</span></p>
+                </div>
+            </div>
+            
+            
+            <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #e11d48;">
+                <p style="margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #e11d48; font-weight: bold; font-family: Arial, sans-serif;">Bill To</p>
+                <p style="margin: 0; font-size: 18px; font-weight: bold; color: #1f2937;" class="inv-client">--</p>
+                <p style="margin: 5px 0 0 0; color: #666; font-family: Arial, sans-serif;" class="inv-email">--</p>
+                <p style="margin: 5px 0 0 0; color: #666; white-space: pre-line; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5;" class="inv-address">--</p>
+            </div>
+            
+            
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-family: Arial, sans-serif;">
+                <thead>
+                    <tr style="background: #f3f4f6;">
+                        <th style="padding: 14px; text-align: left; border-bottom: 2px solid #e5e7eb; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #666;">Description</th>
+                        <th style="padding: 14px; text-align: center; border-bottom: 2px solid #e5e7eb; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #666;">Qty</th>
+                        <th style="padding: 14px; text-align: right; border-bottom: 2px solid #e5e7eb; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #666;">Unit Price</th>
+                        <th style="padding: 14px; text-align: right; border-bottom: 2px solid #e5e7eb; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #666;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody class="inv-items">
+                    
+                </tbody>
+            </table>
+            
+            
+            <div style="margin-left: auto; width: 320px; font-family: Arial, sans-serif;">
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e5e7eb;">
+                    <span style="color: #666;">Subtotal:</span>
+                    <span class="inv-subtotal" style="font-weight: 600;">$0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e5e7eb;" class="inv-surcharge-row hidden">
+                    <span style="color: #666;">Processing Fee:</span>
+                    <span class="inv-surcharge" style="font-weight: 600; color: #d97706;">$0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 15px 0; margin-top: 5px; border-top: 2px solid #1f2937;">
+                    <span style="font-size: 16px; font-weight: bold; color: #1f2937;">Total Due:</span>
+                    <span class="inv-total" style="font-size: 20px; font-weight: bold; color: #e11d48;">$0.00</span>
+                </div>
+            </div>
+            
+            
+            <div style="margin-top: 40px; padding: 25px; background: #f9fafb; border-radius: 8px; display: flex; align-items: center; gap: 25px; border: 1px solid #e5e7eb;">
+                <div class="inv-qr-container" style="flex-shrink: 0;"></div>
+                <div style="flex: 1;">
+                    <p style="margin: 0 0 8px 0; font-weight: bold; color: #1f2937; font-family: Arial, sans-serif; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Payment Options</p>
+                    <p style="margin: 0; color: #666; font-size: 14px; font-family: Arial, sans-serif; line-height: 1.5;">Scan the QR code to pay online instantly. For questions, contact @thamakeupartist.</p>
+                    <p style="margin: 8px 0 0 0; font-size: 11px; color: #9ca3af; font-family: Arial, sans-serif; word-break: break-all;" class="inv-payment-url"></p>
+                </div>
+            </div>
+            
+            
+            <div style="margin-top: 50px; display: flex; justify-content: flex-end;">
+                <div style="text-align: center;">
+                    <div class="inv-signature" style="min-width: 200px; height: 60px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px;"></div>
+                    <div style="border-top: 1px solid #1f2937; padding-top: 8px; width: 200px;">
+                        <p style="margin: 0; font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 1px; font-family: Arial, sans-serif;">Authorized Signature</p>
+                    </div>
+                </div>
+            </div>
+            
+            
+            <div style="margin-top: 50px; text-align: center; padding-top: 30px; border-top: 1px solid #e5e7eb;">
+                <p style="margin: 0; color: #e11d48; font-size: 14px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;">Kimberly Wilson</p>
+                <p style="margin: 5px 0 0 0; color: #9ca3af; font-size: 12px; font-family: Arial, sans-serif;">@thamakeupartist | Professional Makeup Artistry</p>
+                <p style="margin: 15px 0 0 0; color: #9ca3af; font-size: 11px; font-family: Arial, sans-serif; font-style: italic;">Thank you for your business!</p>
+            </div>
+        </div>
+    </div>
+
+    
+
